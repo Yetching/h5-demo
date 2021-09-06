@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WEBGL STUDY</title>
+  </head>
+  <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.0.0/gl-matrix-min.js"></script>
+
+  <body onload="main()">
+    <canvas id="glcanvas" width="640" height="480">
+      你的浏览器似乎不支持或者禁用了HTML5<code>&lt;canvas&gt;</code>元素.
+    </canvas>
+
+    <button onclick="addColor()">着色</button>
+  </body>
+  <script>
+    const mat4 = glMatrix.mat4;
+
+    var squareRotation = 0.0;
+
+    function addColor() {
+      const canvas = document.getElementById('glcanvas');
+
+      const gl = canvas.getContext('webgl');
+
+      const colorBuffer = gl.createBuffer();
+
+      const colors = [
+        1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0,
+        1.0, 1.0,
+      ];
+    }
+
+    function main() {
+      const canvas = document.getElementById('glcanvas');
+
+      const gl = canvas.getContext('webgl');
+
+      if (!gl) {
+        alert('无法初始化WebGL，你的浏览器或者电脑可能不支持WebGL');
+
+        return;
+      }
+
+      const vsSource = `
+      attribute vec4 aVertexPosition;
+      attribute vec4 aVertexColor;
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      varying lowp vec4 vColor;
+
+      void main() {
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        vColor = aVertexColor;
+      }
+    `;
+
+      const fsSource = `
+      varying lowp vec4 vColor;
+      void main() {
+        gl_FragColor = vColor;
+      }
+    `;
+
+      const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+      //获取webgl返回分配的位置
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(
+            shaderProgram,
+            'aVertexPosition'
+          ),
+          vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+        },
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(
+            shaderProgram,
+            'uProjectionMatrix'
+          ),
+          modelViewMatrix: gl.getUniformLocation(
+            shaderProgram,
+            'uModelViewMatrix'
+          ),
+        },
+      };
+
+      console.log(programInfo);
+
+      const buffers = initBuffers(gl);
+
+      var then = 0;
+
+      function render(now) {
+        now *= 0.001;
+        const delayTime = now - then;
+        then = now;
+
+        drawScene(gl, programInfo, buffers, delayTime);
+
+        requestAnimationFrame(render);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    //创建webgl 对象
+
+    //初始化着色器
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+      //创建着色器程序
+      const shaderProgram = gl.createProgram();
+
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      //查看连接状态
+
+      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert(
+          'Unable to initialize the shader program: ' +
+            gl.getProgramInfoLog(shaderProgram)
+        );
+        return null;
+      }
+
+      return shaderProgram;
+    }
+
+    //创建指定类型着色器
+
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+
+      //传参
+      gl.shaderSource(shader, source);
+      //编译
+      gl.compileShader(shader);
+
+      //查看编译状态
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert(
+          'An error occurred compiling the shaders: ' +
+            gl.getShaderInfoLog(shader)
+        );
+        gl.deleteShader(shader);
+
+        return null;
+      }
+
+      return shader;
+    }
+
+    //创建缓冲器存储图形顶点
+    //创建物体
+
+    function initBuffers(gl) {
+      //位置
+      const positionBuffer = gl.createBuffer();
+      //绑定上下文
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+      //声明24个顶点
+      var vertices = [
+        // Front face
+        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+
+        // Back face
+        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+
+        // Top face
+        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+
+        // Bottom face
+        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+
+        // Right face
+        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+
+        // Left face
+        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+      ];
+
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(vertices),
+        gl.STATIC_DRAW
+      );
+
+      //颜色
+
+      //各个面的颜色  以及每个顶点的颜色 为什么？
+      const colorBuffer = gl.createBuffer();
+
+      var colors = [
+        [1.0, 1.0, 1.0, 1.0], // Front face: white
+        [1.0, 0.0, 0.0, 1.0], // Back face: red
+        [0.0, 1.0, 0.0, 1.0], // Top face: green
+        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
+        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
+        [1.0, 0.0, 1.0, 1.0], // Left face: purple
+      ];
+
+      var generatedColors = [];
+
+      for (j = 0; j < 6; ++j) {
+        var c = colors[j];
+
+        generatedColors = generatedColors.concat(c, c, c, c);
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(generatedColors),
+        gl.STATIC_DRAW
+      );
+
+      //元素数组 顶点的组合方式吧  为什么用三角形？
+      //四边形可不可行？
+
+      const cubeBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeBuffer);
+
+      // This array defines each face as two triangles, using the
+      // indices into the vertex array to specify each triangle's
+      // position.
+
+      var cubeVertexIndices = [
+        0,
+        1,
+        2,
+        0,
+        2,
+        3, // front
+        4,
+        5,
+        6,
+        4,
+        6,
+        7, // back
+        8,
+        9,
+        10,
+        8,
+        10,
+        11, // top
+        12,
+        13,
+        14,
+        12,
+        14,
+        15, // bottom
+        16,
+        17,
+        18,
+        16,
+        18,
+        19, // right
+        20,
+        21,
+        22,
+        20,
+        22,
+        23, // left
+      ];
+
+      // Now send the element array to GL
+
+      gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(cubeVertexIndices),
+        gl.STATIC_DRAW
+      );
+
+      return {
+        position: positionBuffer,
+        color: colorBuffer,
+        cube: cubeBuffer,
+      };
+    }
+
+    //加载纹理
+
+    function initTextures() {
+      cubeTexture = gl.createTexture();
+    }
+
+    //绘制场景
+
+    function drawScene(gl, programInfo, buffers, delayTime) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearDepth(1.0);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      //绘制之前进行canvas画布清除
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      //视野？
+      const fieldOfView = (60 * Math.PI) / 180;
+      //canvas画布宽高比  不知道有什么用？
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+
+      console.log(aspect);
+      //镜头远近阈值
+      const zNear = 0.1;
+      const zFar = 100.0;
+
+      //利用工具库计行矩阵计算
+      const projectionMatrix = mat4.create();
+
+      mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+      const modelViewMatrix = mat4.create();
+
+      mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]);
+
+      mat4.rotate(modelViewMatrix, modelViewMatrix, squareRotation, [1, 1, 1]);
+
+      //从buffer中拉取数据传输到webgl对象
+      {
+        //每次迭代提取三个值
+        const numComponents = 3;
+
+        const type = gl.FLOAT;
+
+        const normalize = false;
+
+        const stride = 0;
+
+        const offset = 0;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+      {
+        //颜色
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          4,
+          gl.FLOAT,
+          false,
+          0,
+          0
+        );
+
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+      }
+
+      //使用索引向量构建图形
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.cube);
+
+      //指定webgl使用我们的着色器程序
+
+      gl.useProgram(programInfo.program);
+
+      //设置着色器uniforms
+
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix
+      );
+
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix
+      );
+
+      //正方形2D
+      // {
+      //   const offset = 0;
+      //   const vertexCount = 4;
+      //   gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      // }
+
+      //正方体3D
+      {
+        const vertexCount = 36; //6个面 每个面两个三角形  每个三角形三个顶点
+        const offset = 0;
+        const type = gl.UNSIGNED_SHORT;
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+      }
+      squareRotation += delayTime;
+    }
+  </script>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      html,
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .wrapper {
+        width: 500px;
+      }
+      .container1 {
+        width: 500px;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+      .header {
+        position: sticky;
+        top: 0px;
+        height: 20px;
+        line-height: 20px;
+      }
+      .box {
+        flex-shrink: 0;
+        width: 460px;
+        height: 80px;
+        background: aqua;
+        margin: 10px 10px;
+      }
+      /* p {
+        white-space: nowrap;
+      } */
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container1">
+        <div class="header">container1 header</div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+      </div>
+    </div>
+    <p>2008北京 奥运会</p>
+    <script src="./iffe.js"></script>
+  </body>
+</html>

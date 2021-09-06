@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <video
+      id="videoPlay"
+      src="./test.mp4"
+      width="500"
+      height="540"
+      autoplay
+      controls
+    ></video>
+    <button onclick="handleClick()">截图</button>
+  </body>
+  <script>
+    function handleClick() {
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      var video = document.getElementById('videoPlay');
+      canvas.width = video.width;
+      canvas.height = video.height;
+      ctx.drawImage(video, 0, 0, video.width, video.height);
+      const url = canvas.toDataURL('image/png');
+      console.log(url);
+    }
+  </script>
+</html>
