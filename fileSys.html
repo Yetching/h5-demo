@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>file_syatem_access_api</title>
+  </head>
+  <script src="./file.js"></script>
+  <body>
+    <input type="text" value="" id="input" />
+    <button onclick="save()">保存</button>
+    <button onclick="read()">打开文件</button>
+  </body>
+  <script>
+    const input = document.getElementById('input');
+    function save() {
+      console.log(input.value);
+      const blob = new Blob([input.value]);
+
+      saveFile(blob, 'test').then((res) => {
+        alert(`${res.kind} writing is done which is named ${res.name}`);
+        input.value = '';
+      });
+    }
+
+    function read() {
+      console.log('open file');
+      openFile().then((res) => {
+        console.log(res);
+        const url = URL.createObjectURL(res);
+        const type = res.type.split('/')[0];
+
+        switch (type) {
+          case 'video':
+            console.log('video');
+            const videoNode = document.createElement('video');
+            console.log(videoNode);
+            videoNode.width = 480;
+            videoNode.height = 270;
+            videoNode.src = url;
+            videoNode.autoplay = true;
+            videoNode.controls = true;
+            document.body.appendChild(videoNode);
+            break;
+          case 'text':
+            console.log('text');
+            break;
+          case 'image':
+            console.log('image');
+            break;
+        }
+      });
+    }
+  </script>
+</html>

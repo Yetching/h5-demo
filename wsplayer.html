@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <video id="video" controls></video>
+    <script>
+      var ws = new WebSocket('ws://5.5.3.231:9001');
+
+      var videoNode = document.getElementById('video');
+
+      var mediaSource = null;
+
+      var sourceBuffer = null;
+
+      var mimeType = '';
+
+      var queue = [];
+
+      function onOpen(evt) {
+        console.log(evt);
+        ws.binaryType = 'arraybuffer';
+        console.log('CONNECTED');
+        let sendUrl = `{"cameraId": "37021464001310063697", "nodeType": "RTSP"}`;
+        ws.send(sendUrl);
+      }
+
+      function onClose(evt) {
+        console.log('DISCONNECTED');
+      }
+
+      function onError(evt) {
+        console.log('ERROR:' + evt.data);
+      }
+
+      function onMessage(evt) {
+        if (typeof evt.data == 'string') {
+          createMedia(evt.data.split(':')[1]);
+        } else {
+          // loadVideo()
+          let result = new Uint8Array(evt.data);
+
+          console.log(result);
+
+          queue.push(result);
+
+          loadVideo();
+        }
+      }
+
+      function loadVideo() {
+        if (queue && queue.length) {
+          if (!sourceBuffer.updating) {
+            var newBuffer = queue.shift();
+
+            sourceBuffer.appendBuffer(newBuffer);
+            newBuffer = null;
+          } else {
+          }
+        } else {
+        }
+      }
+
+      function createMedia(type) {
+        mimeType = 'video/mp4; codecs="' + type + '"';
+        if ('MediaSource' in window && MediaSource.isTypeSupported(mimeType)) {
+          mediaSource = new MediaSource();
+          videoNode.src = URL.createObjectURL(mediaSource);
+          videoNode.oncanplay = () => {
+            // videoNode.play();
+          };
+          mediaSource.addEventListener('sourceopen', sourceOpen);
+        } else {
+          console.error('Unsupported MIME type or codec: ', mimeType);
+        }
+      }
+
+      function sourceOpen() {
+        mediaSource.removeEventListener('sourceopen', sourceOpen);
+
+        sourceBuffer = mediaSource.addSourceBuffer(mimeType);
+
+        loadVideo();
+
+        sourceBuffer.addEventListener('updateend', onUpdateEnd);
+      }
+
+      function onUpdateEnd() {
+        console.log('update end');
+
+        loadVideo();
+      }
+
+      var video = document.querySelector('video');
+
+      ws.onopen = onOpen;
+
+      ws.onclose = onClose;
+
+      ws.onmessage = onMessage;
+
+      ws.onerror = onError;
+      // Need to be specific for Blink regarding codecs
+      // ./mp4info frag_bunny.mp4 | grep Codec
+      // var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+
+      // if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
+      //   var mediaSource = new MediaSource();
+      //   //console.log(mediaSource.readyState); // closed
+      //   video.src = URL.createObjectURL(mediaSource);
+      //   mediaSource.addEventListener('sourceopen', sourceOpen);
+      // } else {
+      //   console.error('Unsupported MIME type or codec: ', mimeCodec);
+      // }
+
+      // function sourceOpen(_) {
+      //   //console.log(this.readyState); // open
+      //   var mediaSource = this;
+      //   var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+      //   fetchAB(assetURL, function (buf) {
+      //     sourceBuffer.addEventListener('updateend', function (_) {
+      //       mediaSource.endOfStream();
+      //       video.play();
+      //       //console.log(mediaSource.readyState); // ended
+      //     });
+      //     sourceBuffer.appendBuffer(buf);
+      //   });
+      // }
+
+      // function fetchAB(url, cb) {
+      //   console.log(url);
+      //   var xhr = new XMLHttpRequest();
+      //   xhr.open('get', url);
+      //   xhr.responseType = 'arraybuffer';
+      //   xhr.onload = function () {
+      //     cb(xhr.response);
+      //   };
+      //   xhr.send();
+      // }
+    </script>
+  </body>
+</html>
