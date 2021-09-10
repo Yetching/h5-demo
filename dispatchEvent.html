@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>diy event</title>
+  </head>
+  <body>
+    <div id="diy"></div>
+    <div id="custom"></div>
+    <script>
+      //v1
+      const dom = document.getElementById('diy');
+
+      dom.addEventListener(
+        'cat',
+        function (e) {
+          console.log(e);
+        },
+        false
+      );
+
+      const evt = document.createEvent('HTMLEvents');
+      evt.initEvent('cat', false, false);
+
+      dom.dispatchEvent(evt);
+
+      //v2
+
+      const node = document.getElementById('custom');
+
+      node.addEventListener('customEvent', function (e) {
+        console.log(e);
+      });
+
+      const event = new CustomEvent('customEvent', {
+        detail: {
+          hazcheeseburger: true,
+          name: 'customEvent',
+        },
+      });
+
+      setTimeout(() => {
+        node.dispatchEvent(event);
+      }, 5000);
+    </script>
+  </body>
+</html>
